@@ -29,12 +29,13 @@ class Agent(object):
         
         #set single set episode as our batch (we could do a batch of episode)
         self.policy, self.predict = self.build_policy_network()
-        self.action_space = [i for 1 in range(n_actions)]
+        self.action_space = [i for i in range(n_actions)]
         self.model_file = fname
         
 #### Build Policy Network Function
     def build_policy_network(self):
-       input= Input(shape=(self.input_dims,))
+       input = Input(shape=(self.input_dims,))
+       advantages = Input(shape=[1])
        dense1 = Dense(self.fc1_dims, activation ='relu')(input)
        dense2 = Dense(self.fc2_dims, activation= 'relu')(dense1)
        probs = Dense(self.n_actions, activation= 'softmax')(dense2)
@@ -62,6 +63,7 @@ class Agent(object):
         
         return action
     
+    #handels interface with memory
     def store_transition(self, observation, action, reward):
         self.action_memory.append(action)
         self.state_memory.append(observation)
@@ -69,7 +71,44 @@ class Agent(object):
         
         
     def learn(self):
-         h
+         state_memory = np.array(self.state_memory)
+         action_memory = np.array(self.action_memory)
+         reward_memory = np.array(self.reward_memory)
+         
+         #turn action to one hot encoding
+         actions = np.zeros([len(action_memory), self.n_actions])
+         actions[np.arange(len(action_memory), self.n_actions)] = 1
+         
+         #calculate reward at each time-step
+         G = np.zeros_like(reward_memory)
+         for t in range(t, len(reward_memory)):
+             G_sum = 0
+             discount = 1
+             for k in range(t, len(reward_memory)):
+                 G_sum += reward_memory[k]*discount
+                 discount *=self.gamma
+                 
+             G[t] = G_sum
+         mean = np.mean(G)
+         std = np.std(G) if np.std(G) > 0 else 1
+         self.G = (G.mean)/std
+         
+         cost = self.policy.train_on_batch([state_memory, self.G], actions)
+         
+         
+         #reset after it is done
+         self.state_memory = []
+         self.action_memory = []
+         self.reward_memory = []
+         
+         
+         #return cost
+    def save_model(self):
+        self.policy.save(self.model_file)
+        
+    def load_model(self):
+        self.policy = load_model(self.model_file9o)
+         
         
         
         
