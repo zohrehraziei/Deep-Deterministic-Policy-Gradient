@@ -21,7 +21,7 @@ from utils import plotLearning
 if __name__ == '__main__':
     agent = Agent(ALPHA=0.0005, input_dims=8 , GAMMA=0.99, n_actions=4,
                  layer1_size=64, layer2_size=64)
-    env = gym.make('CartPole-v1')
+    env = gym.make('LunarLander-v2')
     score_history = []
     
     n_episodes = 2000
