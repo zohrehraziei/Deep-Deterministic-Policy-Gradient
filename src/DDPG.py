@@ -110,6 +110,49 @@ class Actor(object):
 
         self.optimize = tf.train.AdamOptimizer(self.lr).\
                     apply_gradients(zip(self.actor_gradients, self.params))
+    
+    
+    def build_network(self):
+# every network has its scope
+        with tf.variable_scope(self.name):
+            self.input = tf.placeholder(tf.float32,
+                                        shape=[None, *self.input_dims],
+                                        name='inputs')
+
+            self.action_gradient = tf.placeholder(tf.float32,
+                                          shape=[None, self.n_actions],
+                                          name='gradients')
+            # initialization
+            f1 = 1. / np.sqrt(self.fc1_dims)
+            dense1 = tf.layers.dense(self.input, units=self.fc1_dims,
+                                     kernel_initializer=random_uniform(-f1, f1),
+                                     bias_initializer=random_uniform(-f1, f1))
+            # do batch normalization
+            batch1 = tf.layers.batch_normalization(dense1)
+            # activate the first layer
+            layer1_activation = tf.nn.relu(batch1)
+            
+            
+            f2 = 1. / np.sqrt(self.fc2_dims)
+            dense2 = tf.layers.dense(layer1_activation, units=self.fc2_dims,
+                                     kernel_initializer=random_uniform(-f2, f2),
+                                     bias_initializer=random_uniform(-f2, f2))
+            batch2 = tf.layers.batch_normalization(dense2)
+            layer2_activation = tf.nn.relu(batch2)
+            
+            # out put layer which is the deterministic policy
+            f3 = 0.003
+            mu = tf.layers.dense(layer2_activation, units=self.n_actions,
+                            activation='tanh',
+                            kernel_initializer= random_uniform(-f3, f3),
+                            bias_initializer=random_uniform(-f3, f3))
+            self.mu = tf.multiply(mu, self.action_bound)
+            
+# getting the actual action out of the network
+            
+            
+
+
 
     
     
