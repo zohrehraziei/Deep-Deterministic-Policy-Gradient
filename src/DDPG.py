@@ -18,13 +18,14 @@ Deep Deterministic Policy Gradients Method with Tensorflow
 # update are soft for parameter of the two target networks - theta_prime = tau*theta + (1-tau)*theta_prime with tau<<1
 # the target actor is just evaluation acotr plus some noise process (N)
 # they use Ornstein Uhlenbeck -> need a class for noise
-# so need claas for replay buffer, batch normalization, noise, actor, and critic
+# so need claas for replay buffer (batch normalization), noise, actor, and critic
 
 #https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py
 
 import os
 import numpy as np
 import tensorflow as tf 
+from tensorflow.initializers import random_uniform
 
 # noise function
 class OUActionNoise(object):
@@ -80,6 +81,37 @@ class PeplayBuffer(object):
         terminal = self.terminal_memory[batch]
         
         return states, actions, rewards, new_states, terminal
+    
+    
+# actor decides which action to take   
+class Actor(object):
+    def __inti__(self, lr, n_actions, name, input_dims, sess, fc1_dims,
+                 fc2_dims, action_bound, batch_size=64, chkpt_dir='tmp/ddpg'):
+        self.lr = lr
+        self.n_actions = n_actions
+        self.name = name
+        self.fc1_dims = fc1_dims
+        self.fc2_dims = fc2_dims
+        self.sess = sess
+        self.batch_size = batch_size
+        self.action_bound = action_bound
+        self.chkpt_dir = chkpt_dir
+        self.build_network()
+# scope the set of parameter for actor and critic network        
+        self.params = tf.trainable_variables(scope=self.name)
+        self.checkpoint_file = os.path.join(chkpt_dir, name+'_ddpg.ckpt')
+        
+# calculate gradiant
+        self.unnormalized_actor_gradients = tf.gradients(
+            self.mu, self.params, -self.action_gradient)
+
+        self.actor_gradients = list(map(lambda x: tf.div(x, self.batch_size),
+                                        self.unnormalized_actor_gradients))
+
+        self.optimize = tf.train.AdamOptimizer(self.lr).\
+                    apply_gradients(zip(self.actor_gradients, self.params))
+
+    
     
         
         
