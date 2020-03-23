@@ -48,8 +48,8 @@ class OUActionNoise(object):
         self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
         
         
-class PeplayBuffer(object):
-    def __inti__(self, max_size, input_shape, n_actions):
+class ReplayBuffer(object):
+    def __init__(self, max_size, input_shape, n_actions):
         self.mem_size = max_size
         self.mem_cntr = 0
         self.state_memory = np.zeros((self.mem_size, *input_shape))
@@ -57,6 +57,7 @@ class PeplayBuffer(object):
         self.action_memory = np.zeros((self.mem_size, n_actions))
         self.reward_memory = np.zeros(self.mem_size)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)
+        
         
     def store_transition(self, state, action, reward, state_, done):
         index = self.mem_cntr % self.mem_size
@@ -85,10 +86,11 @@ class PeplayBuffer(object):
     
 # actor decides which action to take   
 class Actor(object):
-    def __inti__(self, lr, n_actions, name, input_dims, sess, fc1_dims,
+    def __init__(self, lr, n_actions, name, input_dims, sess, fc1_dims,
                  fc2_dims, action_bound, batch_size=64, chkpt_dir='tmp/ddpg'):
         self.lr = lr
         self.n_actions = n_actions
+        self.input_dims = input_dims
         self.name = name
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
@@ -192,36 +194,48 @@ class Critic(object):
                                            shape=[None,1],
                                            name='targets')
         # we have a dense layer for input and we want to initialize it with random number
-        f1 = 1. / np.sqrt(self.fc1_dims)
-        dense1 = tf.layers.dense(self.input, units=self.fc1_dims,
+        
+    def build_network(self):
+        with tf.variable_scope(self.name):
+            self.input = tf.placeholder(tf.float32,
+                                        shape=[None, *self.input_dims],
+                                        name='inputs')
+
+            self.actions = tf.placeholder(tf.float32,
+                                          shape=[None, self.n_actions],
+                                          name='actions')
+
+            self.q_target = tf.placeholder(tf.float32,
+                                           shape=[None,1],
+                                           name='targets')
+
+            f1 = 1. / np.sqrt(self.fc1_dims)
+            dense1 = tf.layers.dense(self.input, units=self.fc1_dims,
                                      kernel_initializer=random_uniform(-f1, f1),
                                      bias_initializer=random_uniform(-f1, f1))
-        batch1 = tf.layers.batch_normalization(dense1)
-        layer1_activation = tf.nn.relu(batch1)
-        
+            batch1 = tf.layers.batch_normalization(dense1)
+            layer1_activation = tf.nn.relu(batch1)
+
         # second layer does not have activation since it needs another layer
-        f2 = 1. / np.sqrt(self.fc2_dims)
-        dense2 = tf.layers.dense(layer1_activation, units=self.fc2_dims,
+            f2 = 1. / np.sqrt(self.fc2_dims)
+            dense2 = tf.layers.dense(layer1_activation, units=self.fc2_dims,
                                      kernel_initializer=random_uniform(-f2, f2),
                                      bias_initializer=random_uniform(-f2, f2))
-        batch2 = tf.layers.batch_normalization(dense2)
-        
-        action_in = tf.layers.dense(self.actions, units=self.fc2_dims,
+            batch2 = tf.layers.batch_normalization(dense2)
+
+            action_in = tf.layers.dense(self.actions, units=self.fc2_dims,
                                         activation='relu')
-        state_actions = tf.add(batch2, action_in)
-        
+            state_actions = tf.add(batch2, action_in)
+            state_actions = tf.nn.relu(state_actions)
         # activate state_action
-        state_actions = tf.nn.relu(state_actions)
-        
-        f3 = 0.003
-        self.q = tf.layers.dense(state_actions, units=1,
+            f3 = 0.003
+            self.q = tf.layers.dense(state_actions, units=1,
                                kernel_initializer=random_uniform(-f3, f3),
                                bias_initializer=random_uniform(-f3, f3),
                                kernel_regularizer=tf.keras.regularizers.l2(0.01))
-        
         # loss function and self.q is the out put of deep NN
+            self.loss = tf.losses.mean_squared_error(self.q_target, self.q)        
         
-        self.loss = tf.losses.mean_squared_error(self.q_target, self.q)
         
     def predict(self, inputs, actions):
         return self.sess.run(self.q,
