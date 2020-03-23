@@ -249,7 +249,7 @@ class Critic(object):
 
 
 
-        
+# niose, replay buffer, and four different NNs for actor and critic drive for based object of agent       
         
             
 
