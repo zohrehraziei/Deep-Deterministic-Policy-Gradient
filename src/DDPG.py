@@ -234,7 +234,21 @@ class Critic(object):
                                  self.q_target: q_target})        
         
         
-        # function for getting action-gradient 
+    # function for getting action-gradient 
+    def get_action_gradients(self, inputs, actions):
+        return self.sess.run(self.action_gradients,
+                             feed_dict={self.input: inputs,
+                                        self.actions: actions})
+    def load_checkpoint(self):
+        print("...Loading checkpoint...")
+        self.saver.restore(self.sess, self.checkpoint_file)
+
+    def save_checkpoint(self):
+        print("...Saving checkpoint...")
+        self.saver.save(self.sess, self.checkpoint_file)
+
+
+
         
         
             
