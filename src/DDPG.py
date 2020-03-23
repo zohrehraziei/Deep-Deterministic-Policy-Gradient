@@ -149,6 +149,46 @@ class Actor(object):
             self.mu = tf.multiply(mu, self.action_bound)
             
 # getting the actual action out of the network
+    def predict(self, inputs):
+             return self.sess.run(self.mu, feed_dict={self.input: inputs})
+# actual backpropogation though the network
+    def train(self, inputs, gradients):
+        self.sess.run(self.optimize,
+                      feed_dict={self.input: inputs,
+                                 self.action_gradient: gradients})             
+         
+# two functiosn for loading and saving the model            
+    def load_checkpoint(self):
+        print("...Loading checkpoint...")
+        self.saver.restore(self.sess, self.checkpoint_file)
+
+    def save_checkpoint(self):
+        print("...Saving checkpoint...")
+        self.saver.save(self.sess, self.checkpoint_file)
+        
+
+class Critic(object):
+    def __init__(self, lr, n_actions, name, input_dims, sess, fc1_dims, fc2_dims,
+                 batch_size=64, chkpt_dir='tmp/ddpg'):
+        self.lr = lr
+        self.n_actions = n_actions
+        self.name = name
+        self.fc1_dims = fc1_dims
+        self.fc2_dims = fc2_dims
+        self.chkpt_dir = chkpt_dir
+        self.input_dims = input_dims
+        self.batch_size = batch_size
+        self.sess = sess
+        self.build_network()
+        self.params = tf.trainable_variables(scope=self.name)
+        self.saver = tf.train.Saver()
+        self.checkpoint_file = os.path.join(chkpt_dir, name +'_ddpg.ckpt')
+
+        self.optimize = tf.train.AdamOptimizer(self.lr).minimize(self.loss)
+
+        self.action_gradients = tf.gradients(self.q, self.actions)
+        
+            
             
             
 
