@@ -190,9 +190,6 @@ class Critic(object):
 
         self.action_gradients = tf.gradients(self.q, self.actions)
         
-        self.q_target = tf.placeholder(tf.float32,
-                                           shape=[None,1],
-                                           name='targets')
         # we have a dense layer for input and we want to initialize it with random number
         
     def build_network(self):
