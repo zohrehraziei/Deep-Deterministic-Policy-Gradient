@@ -3,7 +3,6 @@
 Created on Tue Mar 17 17:43:46 2020
 Deep Deterministic Policy Gradients Method with Tensorflow
 
-@author: raziei.z@husky.neu.edu
 """
 # need replay buffer class
 # use replay buffer to address the issue between samples generated on subsequent steps within an episode
@@ -366,10 +365,3 @@ class Agent(object):
         self.target_actor.load_checkpoint()
         self.critic.save_checkpoint()
         self.target_critic.save_checkpoint()        
-
-
-
-    
-    
-        
-        
