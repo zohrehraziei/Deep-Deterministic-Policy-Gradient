@@ -2,7 +2,6 @@
 """
 Created on Mon Mar 16 10:05:08 2020
 
-@author: zohre
 """
 
 import matplotlib.pyplot as plt 
