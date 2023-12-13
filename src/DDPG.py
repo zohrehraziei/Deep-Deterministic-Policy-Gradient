@@ -20,7 +20,6 @@ Deep Deterministic Policy Gradients Method with Tensorflow
 # they use Ornstein Uhlenbeck -> need a class for noise
 # so need claas for replay buffer (batch normalization), noise, actor, and critic
 
-#https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py
 
 import os
 import numpy as np
