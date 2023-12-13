@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Mar 16 09:06:20 2020
-
-@author: zohre
 """
 
 import gym
@@ -10,13 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PolicyGradients import Agent
 from utils import plotLearning
-#from gym.envs.registration import registry, register, make, spec
-#register(
-#    id='CartPole-v1',
-#    entry_point='gym.envs.classic_control:AcrobotEnv',
-#    reward_threshold=-100.0,
-#    max_episode_steps=500,
-#)
 
 if __name__ == '__main__':
     agent = Agent(ALPHA=0.0005, input_dims=8 , GAMMA=0.99, n_actions=4,
@@ -45,5 +36,4 @@ if __name__ == '__main__':
         
     filename = 'lunar_lander.png'
     plotLearning(score_history, filename=filename, window=100)        
-            
             
