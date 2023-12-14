@@ -107,16 +107,4 @@ class Agent(object):
         self.policy.save(self.model_file)
         
     def load_model(self):
-        self.policy = load_model(self.model_file9o)
-         
-        
-        
-        
-
-       
-        
-       
-        
-           
-        
-    
+        self.policy = load_model(self.model_file9o) 
